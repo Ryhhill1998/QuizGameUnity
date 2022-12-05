@@ -1,4 +1,3 @@
-using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -9,7 +8,8 @@ public class Quiz : MonoBehaviour
 {
     [Header("Questions")]
     [SerializeField] private TextMeshProUGUI questionText;
-    [SerializeField] private QuestionSO question;
+    private QuestionSO currentQuestion;
+    [SerializeField] private List<QuestionSO> questions = new List<QuestionSO>();
 
     [Header("Answers")]
     [SerializeField] private int correctAnswerIndex;
@@ -27,7 +27,6 @@ public class Quiz : MonoBehaviour
     private void Start()
     {
         timer = FindObjectOfType<Timer>();
-        GetNextQuestion();
     }
 
     void Update()
@@ -47,20 +46,29 @@ public class Quiz : MonoBehaviour
 
     private void GetNextQuestion()
     {
+        if (questions.Count == 0) return;
+        GetRandomQuestion();
         SetButtonState(true);
         InitialiseQuestion();
         ResetButtonSprite();
     }
 
+    private void GetRandomQuestion()
+    {
+        int randomIndex = Random.Range(0, questions.Count);
+        currentQuestion = questions[randomIndex];
+        questions.RemoveAt(randomIndex);
+    }
+
     private void InitialiseQuestion()
     {
-        questionText.text = question.GetQuestion();
-        correctAnswerIndex = question.GetCorrectAnswerIndex();
+        questionText.text = currentQuestion.GetQuestion();
+        correctAnswerIndex = currentQuestion.GetCorrectAnswerIndex();
         
         for (int i = 0; i < answerButtons.Length; i++)
         {
             TextMeshProUGUI buttonText = answerButtons[i].GetComponentInChildren<TextMeshProUGUI>();
-            buttonText.text = question.GetAnswer(i);
+            buttonText.text = currentQuestion.GetAnswer(i);
         }
     }
 
@@ -83,7 +91,7 @@ public class Quiz : MonoBehaviour
         if (buttonIndex == correctAnswerIndex)
             questionText.text = "Correct!";
         else
-            questionText.text = "Incorrect! The answer was " + question.GetAnswer(correctAnswerIndex);
+            questionText.text = "Incorrect! The answer was " + currentQuestion.GetAnswer(correctAnswerIndex);
 
         Image buttonImage = answerButtons[correctAnswerIndex].GetComponent<Image>();
         buttonImage.sprite = correctAnswerSprite;
