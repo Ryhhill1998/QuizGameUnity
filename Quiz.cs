@@ -7,9 +7,9 @@ using UnityEngine.UI;
 public class Quiz : MonoBehaviour
 {
     [Header("Questions")]
+    [SerializeField] private List<QuestionSO> questions = new List<QuestionSO>();
     [SerializeField] private TextMeshProUGUI questionText;
     private QuestionSO currentQuestion;
-    [SerializeField] private List<QuestionSO> questions = new List<QuestionSO>();
 
     [Header("Answers")]
     [SerializeField] private int correctAnswerIndex;
@@ -22,11 +22,23 @@ public class Quiz : MonoBehaviour
     [Header("Timer")]
     [SerializeField] private Image timerImage;
     private Timer timer;
-    public bool questionAnsweredEarly;
+    private bool questionAnsweredEarly;
+
+    [Header("Score")]
+    [SerializeField] private TextMeshProUGUI scoreText;
+    private ScoreKeeper scoreKeeper;
+
+    [Header("Progress Bar")]
+    [SerializeField] private Slider progressBar;
+
+    public bool isComplete;
 
     private void Start()
     {
         timer = FindObjectOfType<Timer>();
+        scoreKeeper = FindObjectOfType<ScoreKeeper>();
+
+        InitialiseProgressBar();
     }
 
     void Update()
@@ -35,22 +47,30 @@ public class Quiz : MonoBehaviour
         
         if (timer.loadNextQuestion)
         {
+            questionAnsweredEarly = false;
             GetNextQuestion();
             timer.loadNextQuestion = false;
         }
         else if (timer.timerRanOut && !questionAnsweredEarly)
         {
-            OnTimerRunout();
+            OnTimerRunOut();
         }
     }
 
     private void GetNextQuestion()
     {
-        if (questions.Count == 0) return;
+        if (questions.Count == 0)
+        {
+            isComplete = true;
+            return;
+        }
+        
         GetRandomQuestion();
         SetButtonState(true);
         InitialiseQuestion();
         ResetButtonSprite();
+
+        UpdateProgressBar();
     }
 
     private void GetRandomQuestion()
@@ -72,6 +92,17 @@ public class Quiz : MonoBehaviour
         }
     }
 
+    private void InitialiseProgressBar()
+    {
+        progressBar.maxValue = questions.Count;
+        progressBar.value = 0;
+    }
+
+    private void UpdateProgressBar()
+    {
+        progressBar.value++;
+    }
+
     public void OnAnswerSelected(int buttonIndex)
     {
         DisplayAnswer(buttonIndex);
@@ -80,7 +111,7 @@ public class Quiz : MonoBehaviour
         questionAnsweredEarly = true;
     }
 
-    private void OnTimerRunout()
+    private void OnTimerRunOut()
     {
         DisplayAnswer(-1);
         SetButtonState(false);
@@ -89,12 +120,29 @@ public class Quiz : MonoBehaviour
     private void DisplayAnswer(int buttonIndex)
     {
         if (buttonIndex == correctAnswerIndex)
+        {
             questionText.text = "Correct!";
+            scoreKeeper.IncrementCorrectAnswers();
+        }
         else
+        {
             questionText.text = "Incorrect! The answer was " + currentQuestion.GetAnswer(correctAnswerIndex);
+        }
 
+        UpdateCorrectButtonSprite();
+        scoreKeeper.IncrementQuestionsSeen();
+        UpdateScoreText();
+    }
+
+    private void UpdateCorrectButtonSprite()
+    {
         Image buttonImage = answerButtons[correctAnswerIndex].GetComponent<Image>();
         buttonImage.sprite = correctAnswerSprite;
+    }
+
+    private void UpdateScoreText()
+    {
+        scoreText.text = "Score: " + scoreKeeper.CalculateScore() + "%";
     }
 
     private void SetButtonState(bool state)
