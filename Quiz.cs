@@ -1,8 +1,10 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using TMPro;
 using UnityEngine.UI;
+using Random = UnityEngine.Random;
 
 public class Quiz : MonoBehaviour
 {
@@ -32,12 +34,18 @@ public class Quiz : MonoBehaviour
     [SerializeField] private Slider progressBar;
 
     public bool isComplete;
+    
+    private EndQuiz endQuiz;
 
-    private void Start()
+    private void Awake()
     {
         timer = FindObjectOfType<Timer>();
         scoreKeeper = FindObjectOfType<ScoreKeeper>();
+        endQuiz = FindObjectOfType<EndQuiz>();
+    }
 
+    private void Start()
+    {
         InitialiseProgressBar();
     }
 
@@ -62,6 +70,7 @@ public class Quiz : MonoBehaviour
         if (questions.Count == 0)
         {
             isComplete = true;
+            endQuiz.UpdateFinalScoreText();
             return;
         }
         

@@ -8,9 +8,8 @@ public class EndQuiz : MonoBehaviour
 {
     [SerializeField] private TextMeshProUGUI finalScoreText;
     private ScoreKeeper scoreKeeper;
-    private Quiz quiz;
 
-    void Start()
+    void Awake()
     {
         scoreKeeper = FindObjectOfType<ScoreKeeper>();
     }
